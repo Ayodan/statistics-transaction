@@ -4,11 +4,13 @@ import com.transaction.statistics.exception.BadRequestException;
 import com.transaction.statistics.exception.NoContentException;
 import com.transaction.statistics.exception.UnprocessibleEntityException;
 import com.transaction.statistics.model.Transaction;
+import com.transaction.statistics.model.TransactionReport;
 import com.transaction.statistics.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -33,5 +35,11 @@ public class TransactionController {
             return new ResponseEntity<Void>(HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<TransactionReport> getTransactionReport(){
+        TransactionReport transactionReport = service.getTransactionReport();
+        return new ResponseEntity<TransactionReport>(transactionReport, HttpStatus.OK);
     }
 }
