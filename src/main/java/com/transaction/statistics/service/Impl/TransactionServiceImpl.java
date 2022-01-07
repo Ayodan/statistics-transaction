@@ -4,15 +4,20 @@ import com.transaction.statistics.exception.BadRequestException;
 import com.transaction.statistics.exception.NoContentException;
 import com.transaction.statistics.exception.UnprocessibleEntityException;
 import com.transaction.statistics.model.Transaction;
+import com.transaction.statistics.model.TransactionReport;
 import com.transaction.statistics.service.TransactionService;
 import com.transaction.statistics.utilities.CustomResponseCode;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.DoubleSummaryStatistics;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -63,4 +68,31 @@ public class TransactionServiceImpl implements TransactionService {
 
         transactions.add(transaction);
     }
+
+    /**
+     * A method to generate statistical report from saved transactions made withing 3o seconds
+     */
+    @Override
+    public TransactionReport getTransactionReport() {
+        if (!transactions.isEmpty()) {
+            DoubleSummaryStatistics summary = transactions.stream()
+                    .filter(t -> Instant.parse(t.getTimestamp()).atZone(ZoneOffset.UTC).isAfter(Instant.now().atZone(ZoneOffset.UTC).minusSeconds(TRANSACTION_TIME_LIMIT)))
+                    .collect(Collectors.summarizingDouble(value -> Double.parseDouble(value.getAmount())));
+            return new TransactionReport(roundUpToTwoDecimalPlace(summary.getSum()), roundUpToTwoDecimalPlace(summary.getAverage()), roundUpToTwoDecimalPlace(summary.getMax()),
+                    roundUpToTwoDecimalPlace(summary.getMin()), summary.getCount());
+        } else {
+            return new TransactionReport(null, null, null, null, 0L);
+        }
+    }
+
+    /**
+     * A method that enable half round up of Double values returned from statistic summary
+     * on saved transactions to two (2) decimal place and returns a string for response to client.
+     */
+
+    private String roundUpToTwoDecimalPlace(Double value){
+        return new BigDecimal(value).setScale(2, RoundingMode.HALF_UP).toString();
+    }
+
+
 }
