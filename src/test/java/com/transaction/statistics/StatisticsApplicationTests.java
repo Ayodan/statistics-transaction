@@ -17,9 +17,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -54,7 +57,7 @@ class StatisticsApplicationTests {
 	}
 
 	@Test
-	public void addTransactionsSuccessfullyTest() throws Exception {
+	public void shouldAcceptValidTransactionsTest() throws Exception {
 
 		for(Transaction transaction : populateTransactionsToList()) {
 			String transactionToJson = gson.toJson(transaction);
@@ -112,6 +115,19 @@ class StatisticsApplicationTests {
 					.accept(MediaType.APPLICATION_JSON))
 					.andExpect(status().isBadRequest());
 		}
+	}
+
+	@Test
+	public void returnSummaryReport() throws Exception {
+
+		mockMvc.perform(get("/statistics").accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("count", is(4)))
+				.andExpect(jsonPath("sum", is("16.00")))
+				.andExpect(jsonPath("avg", is("4.00")))
+				.andExpect(jsonPath("max", is("6.00")))
+				.andExpect(jsonPath("min", is("1.00")));
 	}
 
 }
