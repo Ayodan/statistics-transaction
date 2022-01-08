@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
-    private final Queue<Transaction> transactions;
+    private Queue<Transaction> transactions;
 
     private final int TRANSACTION_TIME_LIMIT = 30;
 
@@ -83,6 +83,16 @@ public class TransactionServiceImpl implements TransactionService {
         } else {
             return new TransactionReport(null, null, null, null, 0L);
         }
+    }
+
+    /**
+     * @param object
+     * A simple logic to delete all transactions in the queue which accepts an empty request object
+     */
+
+    @Override
+    public void deleteTransaction(Object object) {
+            transactions.removeAll(transactions);
     }
 
     /**
